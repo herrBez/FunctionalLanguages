@@ -54,7 +54,7 @@ I will show by induction on xs that the following holds: \lstinline| xs ++ [ ] =
         \text{\lstinline | [ ] |} \\
     \end{array}
 	$$
-\item \textbf{Step Case}: \lstinline| xs = (w:ws) |:
+\item \textbf{Inductive step}: \lstinline| xs = (w:ws) |:
 	$$
 	\begin{array}{l}
 	\text{\lstinline | (w:ws) ++ [] |} \\
@@ -78,7 +78,7 @@ I will show by induction on xs that \lstinline | xs ++ (ys ++ zs) = (xs ++ ys) +
 	\lstinline| ([] ++ ys) ++ zs | \\
 	\end{array}
 	$$
-	\item \textbf{Step Case}: \lstinline| xs = w:ws |.
+	\item \textbf{Inductive step}: \lstinline| xs = w:ws |.
 	$$
 	\begin{array}{L}
 	\lstinline| (w:ws) ++ (ys ++ zs) | \\
@@ -112,7 +112,7 @@ I will show by induction on \haskellCode{c} that the property holds:
 	\haskellCode{exec d (exec [] s)}\\
 	\end{array}
 	$$
-	\item \textbf{Step Case} \haskellCode{c = (w:ws)}, i.e. the list contains at least one element.
+	\item \textbf{Inductive step} \haskellCode{c = (w:ws)}, i.e. the list contains at least one element.
 	Because the stack is composed of \haskellCode{Push n} and \haskellCode{Add} operations, I have to
 	distinguish two cases:
 	\begin{enumerate}
@@ -178,7 +178,7 @@ two cases: the base case \haskellCode{Leaf x} and the step one \haskellCode{Node
 		\haskellCode{id (Leaf x)}\\
 	\end{array} 
 	$$
-	\item \textbf{Step Case}
+	\item \textbf{Inductive step}
 	$$
 	\begin{array}{L}
 		\haskellCode{fmap id (Node l r)} =\\
@@ -213,7 +213,7 @@ two cases: the base case \haskellCode{Leaf x} and the step one \haskellCode{Node
 
 	\end{array} 
 	$$
-	\item \textbf{Step Case}
+	\item \textbf{Inductive step}
 	$$
 	\begin{array}{L}
 	\haskellCode{fmap (g.h) (Node l r)} =\\
@@ -335,7 +335,7 @@ Before trying to solve the exercise I will show a very trivial LEMMA, that simpl
 	\haskellCode{(Push n) : c}\\
 	\end{array}
 	$$	
-	\item \textbf{Step Case}:
+	\item \textbf{Inductive step}:
 	$$
 	\begin{array}{L}
 	\haskellCode{comp' (Add n m) c}\\
