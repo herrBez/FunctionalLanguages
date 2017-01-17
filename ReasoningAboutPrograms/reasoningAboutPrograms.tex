@@ -1,0 +1,356 @@
+\documentclass[a4paper]{scrartcl}
+\usepackage[english]{babel}
+\usepackage{amsthm}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\newtheorem{lem}{Lemma}
+
+
+\lstset{
+  frame=none,
+  xleftmargin=2pt,
+  stepnumber=1,
+  numbers=left,
+  numbersep=5pt,
+  numberstyle=\ttfamily\tiny\color[gray]{0.3},
+  belowcaptionskip=\bigskipamount,
+  captionpos=b,
+  escapeinside={*'}{'*},
+  language=haskell,
+  tabsize=2,
+  emphstyle={\bf},
+  commentstyle=\it,
+  stringstyle=\mdseries\rmfamily,
+  showspaces=false,
+  keywordstyle=\bfseries\rmfamily,
+  columns=flexible,
+  basicstyle=\small\sffamily,
+  showstringspaces=false,
+  morecomment=[l]\%,
+  moredelim=[is][\underbar]{_}{_},
+}
+\usepackage{array,amsmath}
+
+\newcolumntype{L}{>$l<$}
+\newcommand{\haskellCode}[1]{\lstinline|#1|}
+\newcommand{\explanation}[1]{ \texttt{ \{ #1 \} }}
+
+\begin{document}
+\section*{Exercise 1}
+\emph{Given the definition of the operator \lstinline|(++)|}
+\begin{enumerate}
+	\item \lstinline | [ ] ++ ys = ys|
+    \item \lstinline | (x:xs) ++ ys = x : (xs ++ ys) |
+\end{enumerate}
+\subsection*{Property 1}
+I will show by induction on xs that the following holds: \lstinline| xs ++ [ ] = xs|.
+\begin{itemize}
+\item \textbf{Base Case}: \lstinline| xs = [] |:
+	$$
+    \begin{array}{l}
+    	\text{\lstinline | [] ++ [] |} \\
+    	 \texttt{ \{apply definition of (++) case 1 \} }\\
+        \text{\lstinline | [ ] |} \\
+    \end{array}
+	$$
+\item \textbf{Step Case}: \lstinline| xs = (w:ws) |:
+	$$
+	\begin{array}{l}
+	\text{\lstinline | (w:ws) ++ [] |} \\
+    \texttt{\{ apply definition of (++) case 2 \}} \\
+    \text{\lstinline | w : (ws ++ []) | } \\
+    \texttt{\{ apply I.H. on the subexpression \lstinline | ws ++ [] | \}} \\
+    \text{\lstinline | w : ws | $\equiv$ \lstinline | xs |} \\
+    \end{array}
+    $$
+\end{itemize}
+\subsection*{Property 2}
+I will show by induction on xs that \lstinline | xs ++ (ys ++ zs) = (xs ++ ys) ++ zs|.
+\begin{itemize}
+	\item \textbf{Base Case}: \lstinline| xs = [] |.
+	$$
+	\begin{array}{L}
+	\lstinline| [] ++ (ys ++ zs) | \\
+	\texttt{ \{ apply definition of (++) case 1 \} }\\
+	\lstinline| ys ++ zs | \\
+	\texttt{ \{unapply definition of (++) case 1 to ys \}} \\
+	\lstinline| ([] ++ ys) ++ zs | \\
+	\end{array}
+	$$
+	\item \textbf{Step Case}: \lstinline| xs = w:ws |.
+	$$
+	\begin{array}{L}
+	\lstinline| (w:ws) ++ (ys ++ zs) | \\
+	\texttt{ \{ apply definition of (++) case 2 \} }\\
+	\lstinline| w: (ws ++ (ys ++ zs) | \\
+	\texttt{ \{ apply I.H. on \lstinline| ws ++ (ys ++ zs)|  \}} \\
+	\lstinline| w: ((ws ++ ys) ++ zs) | \\
+	\texttt{ \{unapply case 2 of (++)\} } \\
+	\lstinline| (w: (ws ++ ys)) ++ zs | \\
+	\texttt{ \{unapply case 2 of (++) to  \lstinline| (w: (ws ++ ys)) | \}} \\
+	\lstinline| ((w:ws) ++ ys) ++ zs | \\
+	\texttt{ \{substituting (w:ws) with xs \}}\\
+	\lstinline | (xs ++ ys) ++ zs | 
+	\end{array}
+	$$
+\end{itemize}
+
+\section*{Exercise 2}
+\emph{Show that \emph{\lstinline|exec(c ++ d) s= exec d (exec c s)|}, where \lstinline|exec| is the function  that executes
+	the code consisting of sequences of PUSH n and ADD operations.
+}
+I will show by induction on \haskellCode{c} that the property holds:
+\begin{itemize}
+	\item \textbf{Base Case}: \haskellCode{c = [] } 
+	$$
+	\begin{array}{L}
+	\haskellCode{exec ([] ++ d) s}\\
+	\explanation{Application of (++)} \\
+	\haskellCode{exec d s} \\
+	\explanation{unapplying exec (case 1)} \\
+	\haskellCode{exec d (exec [] s)}\\
+	\end{array}
+	$$
+	\item \textbf{Step Case} \haskellCode{c = (w:ws)}, i.e. the list contains at least one element.
+	Because the stack is composed of \haskellCode{Push n} and \haskellCode{Add} operations, I have to
+	distinguish two cases:
+	\begin{enumerate}
+		\item \haskellCode{c = (Push n):ws}
+			$$
+			\begin{array}{L}
+			\haskellCode{exec (((Push n):ws) ++ d) s}\\
+			\explanation{Application of (++)} \\
+			\haskellCode{exec ((Push n) : (ws++d)) s} \\
+			\explanation{Application of exec} \\
+			\haskellCode{exec (ws ++ d) (n : s)}\\
+			\explanation{Application of I.H.} \\
+			\haskellCode{exec d (exec ws (n:s))} \\
+			\explanation{unapply inner exec} \\
+			\haskellCode{exec d (exec (Push n:ws) s)}\\
+			\end{array}
+			$$
+			\item \haskellCode{c = ADD:ws}
+			$$
+			\begin{array}{L}
+			\haskellCode{exec ((ADD:ws) ++ d) s}\\
+			\explanation{Application of (++)} \\
+			\haskellCode{exec (ADD : (ws++d)) s} \\
+			\explanation{Application of exec}\\
+			We assume that the stack is composed by at least 2 elements, i.e. \haskellCode{s} = \haskellCode{m:n:s'}. \\
+			The previous line is:\\
+			\haskellCode{exec (ADD : (ws++d)) (m:n:s')}\\
+			\haskellCode{exec (ws ++ d) ((m+n) : s')}\\
+			\explanation{Application of I.H.} \\
+			\haskellCode{exec d (exec ws ((m+n):s'))} \\
+			\explanation{unapply inner exec} \\
+			\haskellCode{exec d (exec (ADD:ws) m:n:s')}\\
+			\end{array}
+			$$
+	\end{enumerate}
+	
+
+\end{itemize}
+
+\subsection*{Exercise 3}
+Given the type and instance declarations below, verify the functor laws for the Tree type, by induction of trees:	
+\begin{lstlisting}
+data Tree a = Leaf a | Node (Tree a) (Tree a)
+
+instance Functor Tree where
+--fmap :: (a -> b) -> Tree a -> Tree b
+fmap g (Leaf x) = Leaf (g x)
+fmap g (Node l r) = Node (fmap g l) (fmap g r)
+\end{lstlisting}
+\subsection*{First Law}
+I have to show that \haskellCode{fmap id = id}. I have to distinguish 
+two cases: the base case \haskellCode{Leaf x} and the step one \haskellCode{Node l r}
+\begin{itemize}
+	\item \textbf{Base case}
+	$$
+	\begin{array}{L}
+		\haskellCode{fmap id (Leaf x)}= \\
+		\explanation{apply fmap}
+		\haskellCode{Leaf (id x)}=\\
+		\explanation{apply id}
+		\haskellCode{Leaf x}=\\
+		\explanation{unapply id}
+		\haskellCode{id (Leaf x)}\\
+	\end{array} 
+	$$
+	\item \textbf{Step Case}
+	$$
+	\begin{array}{L}
+		\haskellCode{fmap id (Node l r)} =\\
+		\explanation{apply fmap}\\
+		\haskellCode{Node (_fmap id l_) (_fmap id r_)} =\\
+		\explanation{I.H. on trees l and r}\\
+		\haskellCode{Node (_id l_) (_id r_)}=\\
+		\explanation{apply id on l and r}\\
+		\haskellCode{Node l r}=\\
+		\explanation{unaply id}\\
+		\haskellCode{id (Node l r)}\\
+	\end{array}
+	$$
+\end{itemize}
+
+\subsection*{Second Law}
+I have to show that \haskellCode{fmap (g.h) = fmap g. (fmap h)}. I have to distinguish 
+two cases: the base case \haskellCode{Leaf x} and the step one \haskellCode{Node l r}
+\begin{itemize}
+	\item \textbf{Base case} (\haskellCode{Leaf x})
+	$$
+	\begin{array}{L}
+	\haskellCode{fmap (g.h) (Leaf x)}= \\
+	\explanation{apply fmap}\\
+	\haskellCode{Leaf ((g.h) x)}=\\
+	\explanation{apply composition of g and h}\\
+	\haskellCode{Leaf (g (h x))}=\\
+	\explanation{unapply fmap g} \\
+	\haskellCode{fmap g (Leaf (h x))} = \\
+	\explanation{unapply fmap h} \\
+	\haskellCode{(fmap g . fmap h) (Leaf x)}\\
+
+	\end{array} 
+	$$
+	\item \textbf{Step Case}
+	$$
+	\begin{array}{L}
+	\haskellCode{fmap (g.h) (Node l r)} =\\
+	\explanation{apply fmap}\\
+	\haskellCode{Node (_fmap (g.h) l_) (_fmap (g.h) r_)} =\\
+	\explanation{I.H. on trees l and r}\\
+	\haskellCode{Node (_fmap g . fmap h l_) (_fmap g . fmap h r_)}=\\
+	\explanation{unapply fmap g}\\
+	\haskellCode{fmap g (Node (_fmap h l_) (_fmap h r_))}=\\
+	\explanation{unaply fmap h}\\
+	\haskellCode{fmap g . fmap h (Node l r)}\\
+	\end{array}
+	$$
+\end{itemize}
+
+\subsection*{Exercise 4}
+Verify the functor laws for the Maybe type.
+I recall the Maybe instantiation of the functor class:
+
+\begin{lstlisting}
+data Maybe a = Nothing | Just a
+
+instance Functor Maybe where
+--fmap :: (a -> b) -> Tree a -> Tree b
+fmap g Nothing = Nothing
+fmap g (Just x) = Just (g x)
+\end{lstlisting}
+\subsection*{First Law}
+I have to show that \haskellCode{fmap id = id}. I have to distinguish 
+two cases: \haskellCode{Nothing} and \haskellCode{Just x} (There is no induction here!)
+\begin{itemize}
+	\item \textbf{Case A} (\haskellCode{Nothing})
+	$$
+	\begin{array}{L}
+	\haskellCode{fmap id Nothing}= \\
+	\explanation{apply fmap} \\
+	\haskellCode{Nothing}=\\
+	\end{array} 
+	$$
+	\item \textbf{Case B} (\haskellCode{Just x})
+	$$
+	\begin{array}{L}
+	\haskellCode{_fmap id (Just x)_} =\\
+	\explanation{apply fmap}\\
+	\haskellCode{Just (_id x_)} =\\
+	\explanation{apply id}\\
+	\haskellCode{_Just x_}=\\
+	\explanation{unapply id}\\
+	\haskellCode{id (Just x)}=\\
+
+	\end{array}
+	$$
+\end{itemize}
+
+\subsection*{Second Law}
+I have to show that \haskellCode{fmap (g.h) = fmap g. (fmap h)}. I have to distinguish 
+two cases: \haskellCode{Nothing} and \haskellCode{Just x}:
+\begin{itemize}
+	\item \textbf{Case A} (\haskellCode{Nothing})
+	$$
+	\begin{array}{L}
+	\haskellCode{fmap (g.h) Nothing}= \\
+	\explanation{apply fmap} \\
+	\haskellCode{Nothing}=\\
+	\explanation{unapply fmap g}\\
+	\haskellCode{fmap g Nothing} = \\
+	\explanation{unapply fmap h}\\
+	\haskellCode{(fmap g.fmap h) Nothing}
+	\end{array} 
+	$$
+	\item \textbf{Case B} (\haskellCode{Just x})
+		$$
+		\begin{array}{L}
+		\haskellCode{fmap (g.h) (Just x)}= \\
+		\explanation{apply fmap}\\
+		\haskellCode{Just ((g.h) x)}=\\
+		\explanation{apply composition of g and h}\\
+		\haskellCode{Just (g (h x))}=\\
+		\explanation{unapply fmap g} \\
+		\haskellCode{fmap g (Just (h x))} = \\
+		\explanation{unapply fmap h} \\
+		\haskellCode{(fmap g . fmap h) (Just x)}\\
+		
+		\end{array} 
+		$$
+\end{itemize}
+\section*{Exercise 5}
+Given the equation \haskellCode{comp' e c = comp e ++ c}, show how to construct the recursive definition
+for \haskellCode{comp'} by induction on \haskellCode{e}.
+Before trying to solve the exercise I will show a very trivial LEMMA, that simplifies the following proofs:
+\begin{lem}
+	\label{lem:trivial}
+	\haskellCode{[x]++ys = x:ys}
+\end{lem}
+
+\begin{proof}
+	$$
+	\begin{array}{L}
+		\haskellCode{_[x]_++ys} \\
+		\explanation{Desugaring}\\
+		\haskellCode{_(x:[]) ++ ys_}\\
+		\explanation{Apply definition of (++) step case}\\
+		\haskellCode{x : (_[] ++ ys_)}\\
+		\explanation{Apply definition of (++)}\\
+		\haskellCode{x:ys}
+	\end{array}
+	$$
+\end{proof}
+\begin{itemize}
+	\item \textbf{Base Case}:
+	$$
+	\begin{array}{L}
+	\haskellCode{comp' (Val n) c}\\
+	\explanation{apply given equation}\\
+	\haskellCode{comp (Val n) ++ c}\\
+	\explanation{apply comp}\\
+	\haskellCode{[Push n] ++ c}\\
+	\explanation{Lemma \ref{lem:trivial}}\\
+	\haskellCode{(Push n) : c}\\
+	\end{array}
+	$$	
+	\item \textbf{Step Case}:
+	$$
+	\begin{array}{L}
+	\haskellCode{comp' (Add n m) c}\\
+	\explanation{apply given equation}\\
+	\haskellCode{comp (Add n m) ++ c}\\
+	\explanation{apply comp}\\
+	\haskellCode{comp n ++ comp m ++ ([ADD] ++ c)}\\
+	\explanation{Lemma \ref{lem:trivial}}\\
+	\haskellCode{comp n ++ comp m ++ (ADD : c)}\\
+	\explanation{unapply comp'}\\
+	\haskellCode{comp n ++ (comp' m (ADD : c))}\\
+	\explanation{unapply comp'}\\
+	\haskellCode{comp' n (comp' m (ADD : c))}
+	\end{array}
+	$$
+\end{itemize}
+
+\end{document}
