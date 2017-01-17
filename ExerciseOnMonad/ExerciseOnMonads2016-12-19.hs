@@ -12,7 +12,10 @@ import Control.Applicative
 -- compile
 ---------------
 
-
+--
+-- Define an instance of the Monad class for the type (a ->).
+-- Remember that one has to write, instance
+-- Monad ((->)a) where...
 
 -- RECAP a -> b can be rewritten as (->) a b
 
@@ -36,6 +39,9 @@ import Control.Applicative
 ---------------
 -- Exercise (2)
 ---------------
+--Given the following type of expressions
+--that contains variables of some tipe a, show how to make this
+--type into instances of Functor, Applicative and Monad classes.
 data Expr a = Var a | Val Int | Add (Expr a) (Expr a) deriving Show
 
 instance Functor Expr where
@@ -60,22 +66,12 @@ instance Monad Expr where
 	(Var x) >>= f = f x
 	(Add x y) >>= f = (Add (x >>= f) (y >>= f))
 
+
+
+--With the aid of an example, explain what the >>= operator for this type does
+
 -- The (>>=) operator apply the given function to each of the variable
 -- without affecting the values, that remains always integer
-
--- _______________________________-
-
--- Esempio
-
-evalInt :: Expr Int -> Expr Int
-evalInt (Var a) = Var a
-evalInt (Val n) = Val n
-evalInt (Add ex1 ex2) = do
-    a <- evalInt ex1
-    b <- evalInt ex2
-    return (a + b)
-
-
 
 -- Little Example: Assume that the variable are in the range [1..26]
 -- I define the lookup table intToAlphaMap that is composed by 
@@ -100,6 +96,16 @@ ex = (((Add (Add (Var 12) (Var 26)) (Val 11)) >>= (\x -> pure (x + 1))) >>= (\x 
 ---------------
 -- Exercise (3)
 ---------------
+-----------------------------------------------------------------------
+--Rather than making a parameterized type into instances of the Functor
+-- , Applicative and Monad classes in
+--this order, in practice it is sometimes simpler to define the Functor and Applicative instances in terms of
+--the Monad instance, relying on the fact that the order in which the declarations are made is not important
+--in Haskell. Thus, given the monad definition
+------------------------------------------------------------------------
+
+
+
 type State = Int
 --type ST = State -> State
 --type ST a = State (a, State)
