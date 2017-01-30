@@ -6,11 +6,11 @@ import Control.Applicative
 
   
 
----------------
+---------------------------------------------------------------------
 -- Exercise (1)
 -- This exercise is Commented out because otherwise the rest does not
 -- compile
----------------
+---------------------------------------------------------------------
 
 --
 -- Define an instance of the Monad class for the type (a ->).
@@ -33,7 +33,7 @@ import Control.Applicative
 --instance Monad ((->) a) where
 --   -- return : b -> (a -> b)
 --   return = pure
---   -- (>>=) :: (b -> (a -> c)) -> (a -> d)
+--   -- (>>=) :: (a -> b) -> (b -> a -> c) -> (a -> c)
 --   h >>= f = \w -> f (h w) w
 
 ---------------
@@ -77,7 +77,7 @@ instance Monad Expr where
 -- I define the lookup table intToAlphaMap that is composed by 
 -- the tuples (i, a) where i is the position of the alphabet (only
 -- lower case, for simplicity) of the letter a. 
-intToAlphaMap = zip [1..] "abcdefghijklmnopqrstuvwxyz"
+intToAlphaMap = zip [1..] ['a'..'z']
 
 -- This function maps a position to the corresponding letter
 toAlpha k = case [v | (k', v) <- intToAlphaMap, k == k'] of 
@@ -90,7 +90,7 @@ toInt a = case [i | (i, a') <- intToAlphaMap, a == a'] of
 fun x = pure (toInt x)
 
 
-ex = (((Add (Add (Var 12) (Var 26)) (Val 11)) >>= (\x -> pure (x + 1))) >>= (\x -> pure ((x `mod` 26) + 1))) >>= (\x -> pure (toAlpha x))
+ex = (Add (Add (Var 12) (Var 26)) (Val 11)) >>= (\x -> pure (toAlpha x))
 	
 
 ---------------
@@ -106,9 +106,8 @@ ex = (((Add (Add (Var 12) (Var 26)) (Val 11)) >>= (\x -> pure (x + 1))) >>= (\x 
 
 
 
-type State = Int
---type ST = State -> State
---type ST a = State (a, State)
+type State = [Char]
+
 newtype ST a = S (State -> (a, State)) 
 
 app :: ST a -> State -> (a, State)

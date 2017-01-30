@@ -26,19 +26,20 @@ instance Applicative ZipList where
 --
 --
 --
+exA :: [a] -> [a] -> [a] -> [[a]]
 exA l1 l2 l3 = [x:y:z:[] | x <- l1, y <- l2, z <- l3]
 
 ---
 ---
 ---
-exB :: [Int] -> [Int] -> [Int] -> [[Int]]
-exB l1 l2 l3 = toList(pure (\x -> \y -> \z -> x:y:z:[]) <*> Z l1 <*> Z l2 <*> Z l3)
+exB :: [a] -> [a] -> [a] -> [[a]]
+exB l1 l2 l3 = toList(pure (\x y z -> x:y:z:[]) <*> Z l1 <*> Z l2 <*> Z l3)
 
 --
 --
 --
-exC :: [[Int]] -> [[Int]]
-exC l = toList(pure (\g -> \y -> map g y) <*>  Z (map (+) [1..]) <*> Z l)
+exC :: Integral a => [[a]] -> [[a]]
+exC l = toList(pure (\g y -> map g y) <*>  Z (map (+) [1..]) <*> Z l)
 
 -- Function that extract the list from the dummy container
 toList :: ZipList a -> [a]
