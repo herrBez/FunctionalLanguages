@@ -226,7 +226,7 @@ term = do f <- factor
           t <- term
           return (DIV f t)
        <|>
-       do factor
+       factor
 
 expa :: Parser LKC
 expa = do t <- term
@@ -239,7 +239,7 @@ expa = do t <- term
           e <- expa
           return (SUB t e)
        <|>
-       do term
+       term
 
 
 opp_unary :: (LKC -> LKC) -> String -> Parser LKC
@@ -303,8 +303,8 @@ ifthenelse = do symbol "if"
 bind :: Parser (LKC, LKC)
 bind = do v <- var
           symbol "="
-          e1 <- expr
-          return (VAR v, e1)
+          e <- expr
+          return (VAR v, e)
 
 binds :: Parser [(LKC, LKC)]
 binds = do b <- bind
@@ -349,8 +349,8 @@ test2 = "letrec fact = lambda(n) if eq(n,1) then 1 else n * fact(n-1) and x=cons
 
 
 
-printTest :: String -> IO ()
-printTest test = do
+print_test :: String -> IO ()
+print_test test = do
     putStrLn "---------------"
     putStrLn "--- Parsing ---"
     putStrLn "---------------"
@@ -364,6 +364,6 @@ printTest test = do
 
 
 main :: IO ()
-main = do printTest test1
-          printTest test2
+main = do print_test test1
+          print_test test2
           

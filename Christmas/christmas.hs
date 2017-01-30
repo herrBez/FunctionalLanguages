@@ -152,7 +152,7 @@ integers = list integer
 
 comment :: Parser()
 comment = do symbol "--"
-             many (sat (/= '\n')) 
+             many (sat (/= '\n')) --Eventually one can also read the '\n' 
              return ()
                 
                    
@@ -161,7 +161,7 @@ comment = do symbol "--"
 ---------------------------
 -- expr ::= expr + expr | expr * expr | ( expr ) | nat
 
-data Expr = NUM Int | ADD Expr Expr | SUB Expr Expr | MULT Expr Expr | DIV Expr Expr deriving (Show, Eq)
+data Expr = NAT Int | ADD Expr Expr | SUB Expr Expr | MULT Expr Expr | DIV Expr Expr deriving (Show, Eq)
 
 
 expr :: Parser Expr
@@ -195,7 +195,7 @@ factor = do symbol "("
             return e
          <|>
          do n <- natural
-            return (NUM n)
+            return (NAT n)
 
 ------------------------------
 -- Exercise 3
@@ -223,7 +223,8 @@ expr3 = do t <- term3
                  t <- term3
                  return (e - t)
            <|>
-           term3
+             term3
+     
 
 term3 :: Parser Int
 term3 = do f <- factor3
@@ -246,9 +247,30 @@ factor3 = do symbol "("
 
 --workingExpr3 :: Parser Int
 
-                                   
-                               
-                     
+expr3' :: Parser Int
+expr3' = do t <- term3'
+            do symbol "+"
+               e <-expr3'
+               return (t + e)
+            <|>
+            do t <- expr3'
+               do symbol "-"
+                  t <- term3'
+                  return (e - t)
+            <|>
+            term3'                
+term3' = do f <- factor3'
+            do symbol "*"
+               t <- term3'
+               return (f * t)
+               <|> return f                              
+
+factor3' :: Parser Int
+factor3' = do symbol "("
+              e <- expr3'
+              symbol ")"
+              return e
+           <|> natural
  
 ----------------------------------
 -- Exercise 4

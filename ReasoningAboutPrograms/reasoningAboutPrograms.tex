@@ -140,6 +140,7 @@ I will show by induction on \haskellCode{c} that the property holds:
 			We assume that the stack is composed by at least 2 elements, i.e. \haskellCode{s} = \haskellCode{m:n:s'}. \\
 			The previous line is:\\
 			\haskellCode{exec (ADD : (ws++d)) (m:n:s')}\\
+			\\
 			\haskellCode{exec (ws ++ d) ((m+n) : s')}\\
 			\explanation{Application of I.H.} \\
 			\haskellCode{exec d (exec ws ((m+n):s'))} \\
@@ -170,9 +171,9 @@ two cases: the base case \haskellCode{Leaf x} and the step one \haskellCode{Node
 	$$
 	\begin{array}{L}
 		\haskellCode{fmap id (Leaf x)}= \\
-		\explanation{apply fmap}
+		\explanation{apply fmap}\\
 		\haskellCode{Leaf (id x)}=\\
-		\explanation{apply id}
+		\explanation{apply id}\\
 		\haskellCode{Leaf x}=\\
 		\explanation{unapply id}
 		\haskellCode{id (Leaf x)}\\
@@ -209,7 +210,10 @@ two cases: the base case \haskellCode{Leaf x} and the step one \haskellCode{Node
 	\explanation{unapply fmap g} \\
 	\haskellCode{fmap g (Leaf (h x))} = \\
 	\explanation{unapply fmap h} \\
+	\haskellCode{fmap g (fmap h (Leaf x))} = \\
+	\explanation{unapply (.) } \\
 	\haskellCode{(fmap g . fmap h) (Leaf x)}\\
+	
 
 	\end{array} 
 	$$
@@ -221,10 +225,14 @@ two cases: the base case \haskellCode{Leaf x} and the step one \haskellCode{Node
 	\haskellCode{Node (_fmap (g.h) l_) (_fmap (g.h) r_)} =\\
 	\explanation{I.H. on trees l and r}\\
 	\haskellCode{Node (_fmap g . fmap h l_) (_fmap g . fmap h r_)}=\\
+	\explanation{Application of (.)}\\
+	\haskellCode{Node (fmap g (fmap h l)) (fmap g (fmap h r))} = \\
 	\explanation{unapply fmap g}\\
 	\haskellCode{fmap g (Node (_fmap h l_) (_fmap h r_))}=\\
-	\explanation{unaply fmap h}\\
-	\haskellCode{fmap g . fmap h (Node l r)}\\
+	\explanation{unapply fmap h}\\
+	\haskellCode{fmap g (fmap h (Node l r))}\\
+	\explanation{unapply (.)} \\
+	\haskellCode{(fmap g . fmap h) (Node l r)} \\
 	\end{array}
 	$$
 \end{itemize}
