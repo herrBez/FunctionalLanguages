@@ -350,15 +350,24 @@ Before trying to solve the exercise I will show a very trivial LEMMA, that simpl
 	\explanation{apply given equation}\\
 	\haskellCode{comp (Add n m) ++ c}\\
 	\explanation{apply comp}\\
+	\haskellCode{comp n ++ comp m ++ [ADD] ++ c}\\
+	\explanation{apply associativity}\\
 	\haskellCode{comp n ++ comp m ++ ([ADD] ++ c)}\\
 	\explanation{Lemma \ref{lem:trivial}}\\
 	\haskellCode{comp n ++ comp m ++ (ADD : c)}\\
-	\explanation{unapply comp'}\\
+	\explanation{I.H.}\\
 	\haskellCode{comp n ++ (comp' m (ADD : c))}\\
 	\explanation{unapply comp'}\\
 	\haskellCode{comp' n (comp' m (ADD : c))}
 	\end{array}
 	$$
 \end{itemize}
+
+\begin{lstlisting}
+comp' :: Expr -> Code -> Code
+comp' (Val n) c = (Push n):c
+comp' (Add m n) c = comp' m (comp' n (Add:c))
+\end{lstlisting}
+
 
 \end{document}
