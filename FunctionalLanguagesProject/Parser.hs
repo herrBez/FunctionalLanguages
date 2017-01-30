@@ -1,4 +1,6 @@
---module BezParser where
+--{-# OPTIONS_GHC -Wall -fno-warn-unused-do-bind #-}
+
+module Parser where
 
 import Control.Applicative
 import Data.Char
@@ -9,15 +11,28 @@ import Data.Char
 
 
 -- Words that cannot be used as variables/function name
+reservedKeywords :: [[Char]]
 reservedKeywords = ["if", "then", "else", "lambda", "and", "let", "letrec", "in", "end",
                     "null", "cons", "tail", "eq", "leq"] 
 
-data LKC = VAR String | NUM Int | NULL | ADD LKC LKC |
-			SUB LKC LKC | MULT LKC LKC | DIV LKC LKC |
-			EQ LKC LKC | LEQ LKC LKC | H LKC | T LKC | CONS LKC LKC |
-			IF LKC LKC LKC | LAMBDA [LKC] LKC | CALL LKC [LKC] |
-			LET LKC [(LKC,LKC)] | LETREC LKC [(LKC, LKC)]
-			deriving(Show, Eq)
+data LKC = VAR String |
+           NUM Int |
+           NULL |
+           ADD LKC LKC |
+           SUB LKC LKC |
+           MULT LKC LKC |
+           DIV LKC LKC |
+	   EQ LKC LKC |
+           LEQ LKC LKC |
+           H LKC |
+           T LKC |
+           CONS LKC LKC |
+           IF LKC LKC LKC |
+           LAMBDA [LKC] LKC |
+           CALL LKC [LKC] |
+           LET LKC [(LKC,LKC)] |
+           LETREC LKC [(LKC, LKC)]
+         deriving(Show, Eq)
 
 
 ---------------------------------------------------
@@ -37,8 +52,9 @@ item = P (\inp -> case inp of
 instance Functor Parser where
 	--fmap :: (a -> b) -> Parser a -> Parser b
 	fmap g p = P (\inp -> case parse p inp of
-					[] -> []
-					[(v,out)] -> [(g v, out)])
+			        [] -> []
+				[(v,out)] -> [(g v, out)]
+                     )
 -- End of Functor Parser;				
 
 
@@ -63,7 +79,7 @@ instance Monad Parser where
 
 instance Alternative Parser where
 	-- empty :: Parser a
-	empty = P (\inp -> [])
+	empty = P (\_ -> [])
 	
 	-- (<|>) :: Parser a -> Parser a -> Parser a
 	p <|> q = P (\inp -> case parse p inp of 
@@ -162,18 +178,11 @@ integers = list integer
 --- BEGIN OF THE LISP KIT PARSER ---
 ------------------------------------
 
-var_help :: Parser String
-var_help = do x <- letter
-              xs <- many alphanum
-              let l = (x:xs)
-              if(elem l reservedKeywords) --Checking if the var is a keyword
-				then 
-					empty
-				else
-					return (x:xs)
-
 var :: Parser String
-var = token var_help
+var = do v <- identifier
+         if (elem v reservedKeywords)
+            then empty
+            else return v
 
 
 
@@ -234,19 +243,22 @@ expa = do t <- term
 
 
 opp_unary :: (LKC -> LKC) -> String -> Parser LKC
-opp_unary c token = do 
-                      symbol token 
+opp_unary c keyword = do 
+                      symbol keyword 
                       symbol "("
                       e <- expr
                       symbol ")"
                       return (c e)
 
+p_tail :: Parser LKC
 p_tail = opp_unary (T) "tail"
+
+p_head :: Parser LKC
 p_head = opp_unary (H) "head"
 
 opp_binary :: (LKC -> LKC -> LKC) -> String -> Parser LKC
-opp_binary c token = do
-                       symbol token
+opp_binary c keyword = do
+                       symbol keyword
                        symbol "("
                        e1 <- expr
                        symbol ","
@@ -254,17 +266,23 @@ opp_binary c token = do
                        symbol ")"
                        return (c e1 e2)
 
+p_cons :: Parser LKC
 p_cons = opp_binary (CONS) "cons"
-p_eq = opp_binary (Main.EQ) "eq"
+
+p_eq :: Parser LKC
+p_eq = opp_binary (Parser.EQ) "eq"
+
+p_leq :: Parser LKC
 p_leq = opp_binary (LEQ) "leq"
 
+opp :: Parser LKC
 opp = p_head <|> p_tail <|> p_cons <|> p_eq <|> p_leq
 
-
+varCons :: Parser LKC
 varCons = do v <- var
              return (VAR v)
 
-
+lambda :: Parser LKC
 lambda = do symbol "lambda"
             symbol "("
             l <- many varCons
@@ -295,21 +313,27 @@ binds = do b <- bind
            return (b:l)
 
 -- The order is important !!
+expr :: Parser LKC
 expr = prog <|> lambda <|> opp  <|> ifthenelse <|> expa 
 
 
 
 -- Prog Parser Section --
-p_let_and_letrec c token =  do symbol token
-                               b <- binds
-                               symbol "in"
-                               e <- expr
-                               symbol "end"
-                               return (c e b)
+p_let_and_letrec :: (LKC -> [(LKC, LKC)] -> b) -> String -> Parser b
+p_let_and_letrec c keyword = do symbol keyword
+                                b <- binds
+                                symbol "in"
+                                e <- expr
+                                symbol "end"
+                                return (c e b)
 
-
+p_let :: Parser LKC
 p_let = p_let_and_letrec LET "let"
+
+p_letrec :: Parser LKC
 p_letrec = p_let_and_letrec LETREC "letrec"
+
+prog :: Parser LKC
 prog = p_let <|> p_letrec
 
 ---------------------
@@ -322,3 +346,24 @@ test1 = "let x = 2 and y = 4 in x+y*2 end"
 test2 :: String
 test2 = "letrec fact = lambda(n) if eq(n,1) then 1 else n * fact(n-1) and x=cons(1, cons(2, null)) and f = lambda (l g) if eq(l,null) then null else cons (g (head(l)), f(g, tail(l))) in f(x, fact) end" 
 
+
+
+
+printTest :: String -> IO ()
+printTest test = do
+    putStrLn "---------------"
+    putStrLn "--- Parsing ---"
+    putStrLn "---------------"
+    putStrLn test
+    putStrLn "-------------------------------------"
+    putStrLn "--- Parsed successfully: result : ---"
+    putStrLn "-------------------------------------"
+    print $ parse prog test
+    putStrLn "\n\n"
+
+
+
+main :: IO ()
+main = do printTest test1
+          printTest test2
+          
