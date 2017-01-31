@@ -237,7 +237,7 @@ two cases: the base case \haskellCode{Leaf x} and the step one \haskellCode{Node
 	$$
 \end{itemize}
 
-\subsection*{Exercise 4}
+\subsection*{Exercise 4a}
 Verify the functor laws for the Maybe type.
 I recall the Maybe instantiation of the functor class:
 
@@ -281,33 +281,182 @@ I have to show that \haskellCode{fmap (g.h) = fmap g. (fmap h)}. I have to disti
 two cases: \haskellCode{Nothing} and \haskellCode{Just x}:
 \begin{itemize}
 	\item \textbf{Case A} (\haskellCode{Nothing})
-	$$
-	\begin{array}{L}
-	\haskellCode{fmap (g.h) Nothing}= \\
-	\explanation{apply fmap} \\
-	\haskellCode{Nothing}=\\
-	\explanation{unapply fmap g}\\
-	\haskellCode{fmap g Nothing} = \\
-	\explanation{unapply fmap h}\\
-	\haskellCode{(fmap g.fmap h) Nothing}
-	\end{array} 
-	$$
+	
+	\begin{verbatim}
+	fmap (g.h) Nothing = 
+	{apply fmap}
+	Nothing =
+	{unapply fmap g}
+	fmap g Nothing} =
+	{unapply fmap h}
+	(fmap g.fmap h) Nothing
+	\end{verbatim} 
+	
 	\item \textbf{Case B} (\haskellCode{Just x})
-		$$
-		\begin{array}{L}
-		\haskellCode{fmap (g.h) (Just x)}= \\
-		\explanation{apply fmap}\\
-		\haskellCode{Just ((g.h) x)}=\\
-		\explanation{apply composition of g and h}\\
-		\haskellCode{Just (g (h x))}=\\
-		\explanation{unapply fmap g} \\
-		\haskellCode{fmap g (Just (h x))} = \\
-		\explanation{unapply fmap h} \\
-		\haskellCode{(fmap g . fmap h) (Just x)}\\
-		
-		\end{array} 
-		$$
+		\begin{verbatim}
+		fmap (g.h) (Just x) =  
+		{apply fmap}
+		Just ((g.h) x) = 
+		{apply composition of g and h}
+		Just (g (h x))}=
+		{unapply fmap g}
+		fmap g (Just (h x)) = 
+		{unapply fmap h} 
+		(fmap g (fmap h (Just x))
+		{unapply (.)}
+		(fmap g . fmap h) (Just x)
+		\end{verbatim}
+
 \end{itemize}
+
+\subsection*{Exercise 4}
+	Verify the applicative law for the \verb|Maybe| type.
+
+
+\begin{proof}[Proof of the first law]
+	We want to prove that \verb|pure id <*> x = x| holds for \verb|Maybe|.
+	
+	\verb|Nothing| case:
+	
+	\begin{verbatim}
+		pure id <*> Nothing
+		=   { apply pure }
+		(Just id) <*> Nothing
+		=   { apply <*> }
+		fmap id Nothing
+		=   { apply fmap }
+		Nothing
+	\end{verbatim}
+	
+	\verb|Just x| case:
+	
+	\begin{verbatim}
+		pure id <*> (Just x)
+		=   { apply pure }
+		(Just id) <*> (Just x)
+		=   { apply <*> }
+		fmap id (Just x)
+		=   { apply fmap }
+		Just (id x)
+		=   { apply id }
+		Just x
+	\end{verbatim}
+\end{proof}
+
+\begin{proof}[Proof of the second law]
+	We want to prove that \verb|pure (g x) = pure g <*> pure x| holds for \verb|Maybe|.
+	
+	\begin{verbatim}
+		pure (g x)
+		=   { apply pure }
+		Just (g x)
+		=   { unapply fmap }
+		fmap g (Just x)
+		=   { unapply <*> }
+		(Just g) <*> (Just x)
+		=   { unapply pure }
+		pure g <*> pure x
+	\end{verbatim}
+\end{proof}
+
+\begin{proof}[Proof of the third law]
+	We want to prove that \verb|x <*> pure y = pure (\g -> g y) <*> x| holds for \verb|Maybe|.
+	
+	In order to prove the \verb|Nothing| case, we prove that
+	
+	\begin{verbatim}
+		x <*> Nothing = Nothing
+	\end{verbatim}
+	
+	\begin{proof}[Lemma] \verb|x <*> Nothing = Nothing|
+		
+		\verb|Nothing| case:
+		
+		\begin{verbatim}
+			Nothing <*> Nothing = Nothing
+		\end{verbatim}
+		
+		\verb|Just g| case:
+		
+		\begin{verbatim}
+			(Just g) <*> Nothing
+			=   { apply <*> }
+			fmap g Nothing
+			=   { apply fmap }
+			Nothing
+		\end{verbatim}
+	\end{proof}
+	
+	We can conclude that \verb|Nothing <*> _ = _ <*> Nothing = Nothing| because of the \emph{Lemma} just proved. Therefore, the \verb|Nothing| case for the third law is demonstrated.
+	
+	
+	\verb|Just x| case:
+	
+	\begin{verbatim}
+		(Just x) <*> pure y
+		=   { apply pure }
+		(Just x) <*> (Just y)
+		=   { apply <*> }
+		fmap x (Just y)
+		=   { apply fmap }
+		Just (x y)
+		=   { rewrite (x y) using application on a lambda expression }
+		Just ((\g -> g y) x)
+		=   { unapply fmap }
+		fmap (\g -> g y) (Just x)
+		=   { unapply <*> }
+		(Just (\g -> g y)) <*> (Just x)
+		=   { unapply pure }
+		pure (\g -> g y) <*> (Just x)
+	\end{verbatim}
+\end{proof}
+
+\begin{proof}[Proof of the fourth law]
+	We want to prove that \verb|x <*> (y <*> z) = (pure (.) <*> x <*> y) <*> z| holds for \verb|Maybe|.
+	
+	\verb|Nothing| case:
+	
+	\begin{verbatim}
+		(pure (.) <*> Nothing <*> y) <*> z
+		=   { apply inner right most <*> }
+		(pure (.) <*> Nothing) <*> z
+		=   { lemma on inner <*> }
+		Nothing <*> z
+		=   { apply <*> }
+		Nothing
+		=   { unapply <*> }
+		Nothing <*> (y <*> z)
+	\end{verbatim}
+	
+	In the next case we assume that \verb|x|, \verb|y| and \verb|z| are \verb|Just|:
+	
+	\begin{verbatim}
+		(Just x) <*> ((Just y) <*> (Just z))
+		=   { apply inner <*> }
+		(Just x) <*> (fmap y (Just z))
+		=   { apply <*> }
+		fmap x (fmap y (Just z))
+		=   { unapply . }
+		(fmap x . fmap y) (Just z)
+		=   { unapply the second Functor law }
+		fmap (x . y) (Just z)
+		=   { unapply <*> }
+		(Just (x . y)) <*> (Just z)
+		=   { unapply fmap }
+		(fmap (x .) y) <*> (Just z)
+		=   { unapply <*> }
+		((Just (x .)) <*> y) <*> (Just z)
+		=   { unapply fmap }
+		(fmap (.) (Just x) <*> y) <*> (Just z)
+		=   { unapply <*> }
+		((Just (.)) <*> (Just x) <*> (Just y)) <*> (Just z)
+		=   { unapply first pure }
+		(pure (.) <*> (Just x) <*> (Just y)) <*> (Just z)
+	\end{verbatim}
+\end{proof}
+
+
+
 \section*{Exercise 5}
 Given the equation \haskellCode{comp' e c = comp e ++ c}, show how to construct the recursive definition
 for \haskellCode{comp'} by induction on \haskellCode{e}.
