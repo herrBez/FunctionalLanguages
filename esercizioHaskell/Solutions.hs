@@ -25,7 +25,7 @@ vars p = foldl (\x y -> if y `elem` x then x else x ++ [y]) [] (vars_rec (p))
 --un'assegnazione di valori di verità per tutte le variabili della formula, e tutte le possibili assegnazioni sono
 --prodotte.
 ttables ::[Char] -> [[(Char, Bool)]]
-ttables l = foldr(\y previous_res -> [(y, x):xs | xs <- previous_res, x <- [True, False]]) [[]] l
+ttables l = foldr(\y previous_res -> [(y, x):xs | xs <- previous_res, x <- [False, True]]) [[]] l
 
 -- Recursive definition without using foldr
 -- ttables [] = [[]]
@@ -40,6 +40,7 @@ ev_rec (Var a)		tt	= case lookup a tt  of Just v -> v
 ev_rec (Not p) 		tt	= not (ev_rec p tt)
 ev_rec (And p q) 	tt	= (ev_rec p tt) && (ev_rec q tt)
 ev_rec (Imply p q) 	tt	= not(ev_rec p tt) ||  (ev_rec q tt) 
+
 
 solutions :: Prop -> [[(Char, Bool)]] -> Bool
 solutions p l = and (map (\x -> ev_rec p x)  l)
