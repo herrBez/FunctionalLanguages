@@ -178,14 +178,15 @@ integers = list integer
 --- BEGIN OF THE LISP KIT PARSER ---
 ------------------------------------
 
+---- Read the variables
 var :: Parser String
 var = do v <- identifier
          if (elem v reservedKeywords)
             then empty
             else return v
+----
 
-
-
+---- Factor ::= var (Y|€) | integer | null | (Expa)
 factor :: Parser LKC
 factor  = do s <- var
              symbol "("
@@ -213,8 +214,9 @@ factor  = do s <- var
           <|>
           do symbol "null"
              return (NULL)
-          
+-----
 
+---- Term ::= Factor (OPM Term | €)
 term :: Parser LKC
 term = do f <- factor
           symbol "*"
@@ -227,21 +229,32 @@ term = do f <- factor
           return (DIV f t)
        <|>
        factor
+----
 
+---- Opa ::= + | -
+opa :: Parser (LKC -> LKC -> LKC)
+opa = do symbol "+"
+         return (ADD)
+      <|>
+      do
+         symbol "-"
+         return (SUB)
+----
+
+---- Expa ::= Term (OPA Expa | €)
 expa :: Parser LKC
 expa = do t <- term
-          symbol "+"
+          c <- opa
           e <- expa
-          return (ADD t e)
-       <|>
-       do t <- term
-          symbol "-"
-          e <- expa
-          return (SUB t e)
-       <|>
-       term
+          return (c t e)
+          <|>
+          term
+
+----
 
 
+
+----OPPUNARY ::= tail | head
 opp_unary :: (LKC -> LKC) -> String -> Parser LKC
 opp_unary c keyword = do 
                       symbol keyword 
@@ -255,7 +268,10 @@ p_tail = opp_unary (T) "tail"
 
 p_head :: Parser LKC
 p_head = opp_unary (H) "head"
+----
 
+
+---- OPPBINARY ::= cons | eq | leq
 opp_binary :: (LKC -> LKC -> LKC) -> String -> Parser LKC
 opp_binary c keyword = do
                        symbol keyword
@@ -274,23 +290,32 @@ p_eq = opp_binary (Parser.EQ) "eq"
 
 p_leq :: Parser LKC
 p_leq = opp_binary (LEQ) "leq"
+----
 
+
+---- OPP ::= head | tail | cons | eq | leq
 opp :: Parser LKC
 opp = p_head <|> p_tail <|> p_cons <|> p_eq <|> p_leq
+----
 
-varCons :: Parser LKC
-varCons = do v <- var
-             return (VAR v)
 
+
+---- seqVar ::= var SeqVar | €
+seqVar :: Parser [LKC]
+seqVar = do vs <- many(var)
+            return (map (VAR) vs)
+
+
+---- lambda ::= lambda ( Seq_Var ) Exp
 lambda :: Parser LKC
 lambda = do symbol "lambda"
             symbol "("
-            l <- many varCons
+            l <- seqVar
             symbol ")"
             e <- expr
             return (LAMBDA l e)
          
--- if e1 then e2 else e3
+---- ifthenelse ::= if Exp then Exp else Exp
 ifthenelse :: Parser LKC
 ifthenelse = do symbol "if"
                 e1 <- expr
@@ -300,25 +325,30 @@ ifthenelse = do symbol "if"
                 e3 <- expr
                 return (IF e1 e2 e3)
 
+---- bind ::= var = Exp 
 bind :: Parser (LKC, LKC)
 bind = do v <- var
           symbol "="
           e <- expr
           return (VAR v, e)
 
+---- binds ::= var = Exp (and Bind | €)
 binds :: Parser [(LKC, LKC)]
 binds = do b <- bind
            l <- many (do symbol "and"
                          bind)
            return (b:l)
 
--- The order is important !!
+
+---- The order is important
 expr :: Parser LKC
 expr = prog <|> lambda <|> opp  <|> ifthenelse <|> expa 
 
+---- N.B.I called the parser expr instead of exp because of the clash
+---- with the prelude function exp.
+----
 
-
--- Prog Parser Section --
+---- p_let_and_letrec ::= (LET|LETREC) BINDS in EXP end
 p_let_and_letrec :: (LKC -> [(LKC, LKC)] -> b) -> String -> Parser b
 p_let_and_letrec c keyword = do symbol keyword
                                 b <- binds
@@ -332,9 +362,15 @@ p_let = p_let_and_letrec LET "let"
 
 p_letrec :: Parser LKC
 p_letrec = p_let_and_letrec LETREC "letrec"
+----
 
+---- ########################### ----
+---- ### The Lisp-Kit Parser ### ----
+---- ########################### ----
 prog :: Parser LKC
 prog = p_let <|> p_letrec
+---- 
+
 
 ---------------------
 -- Test Cases
