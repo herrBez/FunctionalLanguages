@@ -178,7 +178,7 @@ integers = list integer
 --- BEGIN OF THE LISP KIT PARSER ---
 ------------------------------------
 
----- Read the variables
+---- parse identifiers, excluding keywords
 var :: Parser String
 var = do v <- identifier
          if (elem v reservedKeywords)
@@ -216,8 +216,6 @@ factor  = do s <- var
              return (NULL)
 -----
 
----- Term ::= Factor (OPM Term | €)
-
 ---- Opm ::= * | /
 opm :: Parser (LKC->LKC->LKC)
 opm = do symbol "*"
@@ -226,7 +224,7 @@ opm = do symbol "*"
       do symbol "/"
          return (DIV)
 
-
+---- Term ::= Factor (OPM Term | €)
 term :: Parser LKC
 term = do f <- factor
           c <- opm
