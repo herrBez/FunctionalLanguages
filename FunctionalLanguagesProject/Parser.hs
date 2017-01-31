@@ -217,16 +217,21 @@ factor  = do s <- var
 -----
 
 ---- Term ::= Factor (OPM Term | €)
+
+---- Opm ::= * | /
+opm :: Parser (LKC->LKC->LKC)
+opm = do symbol "*"
+         return (MULT)
+      <|>
+      do symbol "/"
+         return (DIV)
+
+
 term :: Parser LKC
 term = do f <- factor
-          symbol "*"
+          c <- opm
           t <- term
-          return (MULT f t)
-       <|>
-       do f <- factor
-          symbol "/"
-          t <- term
-          return (DIV f t)
+          return (c f t)
        <|>
        factor
 ----
