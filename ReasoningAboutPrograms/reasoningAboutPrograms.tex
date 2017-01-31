@@ -453,6 +453,10 @@ two cases: \haskellCode{Nothing} and \haskellCode{Just x}:
 		=   { unapply first pure }
 		(pure (.) <*> (Just x) <*> (Just y)) <*> (Just z)
 	\end{verbatim}
+	
+The cases in which \verb|y| or \verb|z| are \verb|Nothing| are trivial because from
+both sides of the equation we reach in a few steps the value \verb|Nothing|.
+
 \end{proof}
 
 

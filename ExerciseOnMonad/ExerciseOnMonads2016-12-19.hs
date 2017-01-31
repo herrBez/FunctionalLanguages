@@ -18,22 +18,33 @@ import Control.Applicative
 -- Monad ((->)a) where...
 
 -- RECAP a -> b can be rewritten as (->) a b
+-- Functor
+-- fmap   :: Functor f => (a -> b) -> f a -> fb
+-- Applicative
+-- pure   :: Applicative f => a -> f a
+-- (<*>)  :: Applicative f => f(a->b) -> f a -> f b
+-- Monad
+-- return :: Monad m => a -> m a
+-- (>>=)  :: Monad m => m a -> (a -> m b) -> m b
+-- In this case f a = m a = r -> a
 
---instance Functor ((->) a) where
--- --fmap :: (b->c) -> (a->b) -> a -> c
+
+
+--instance Functor ((->) r) where
+--  --fmap :: (a->b) -> (r->a) -> r->b
 --  fmap = (.)
 
---instance Applicative ((->) a) where
---  --pure :: b -> (a -> b)
+--instance Applicative ((->) r) where
+--  --pure :: a -> (r -> a)
 --  pure x = (\_ -> x)
 
--- -- (<*>) :: (a -> b -> c) -> (a -> b) -> (a-> c)
+-- -- (<*>) :: (r -> a -> b) -> (r -> a) -> (r -> b)
 --    g <*> h = \x -> g x (h x)
   
---instance Monad ((->) a) where
---   -- return : b -> (a -> b)
+--instance Monad ((->) r) where
+--   -- return : a -> (r -> a)
 --   return = pure
---   -- (>>=) :: (a -> b) -> (b -> a -> c) -> (a -> c)
+--   -- (>>=) :: (r -> a) -> (a -> (r -> b)) -> (r -> b)
 --   h >>= f = \w -> f (h w) w
 
 ---------------
